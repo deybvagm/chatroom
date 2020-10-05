@@ -81,6 +81,9 @@ class ChatroomWSHandler(SockJSConnection):
 
         res = json_decode(message)
         msg = res['msg']
+        routing_key = self.rabbit_client.get_routing_key(msg['msg'])
+        print(msg['msg'])
+        print(routing_key)
 
         stage = msg['stage']
 
@@ -100,7 +103,7 @@ class ChatroomWSHandler(SockJSConnection):
 
         LOGGER.info('[ChatWebsocketHandler] Publishing the received message to RabbitMQ')
 
-        self.rabbit_client.publish(msg)
+        self.rabbit_client.publish(msg, routing_key)
 
     def on_close(self):
         """

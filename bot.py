@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 
 define("host", default='localhost', help="host for the Rabbitmq server", type=str)
 define("port", default=5672, help="port for Rabbitmq", type=int)
-define("binding_key", default='stock', help="binding_key for Rabbitmq", type=str)
+define("binding_key", default='/stock', help="binding_key for Rabbitmq", type=str)
 define("routing_key", default='public.*', help="routing key for Rabbitmq", type=str)
 
 LOGGER = logging.getLogger(__name__)

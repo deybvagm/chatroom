@@ -42,7 +42,7 @@ class RabbitmqClient(object):
 
         """
 
-        self.config = params
+        self.conf = params
         self._connection = None
         self._channel = None
         self._closing = False
@@ -51,8 +51,8 @@ class RabbitmqClient(object):
         self._acked = 0
         self._nacked = 0
         self._message_number = 0
-        self._parameters = ConnectionParameters(host=self.config.host, port=self.config.port, virtual_host='/')
-        self._queue = self.config.queue
+        self._parameters = ConnectionParameters(host=self.conf.host, port=self.conf.port, virtual_host='/')
+        self._queue = self.conf.queue
         self.participant = participant
         self._person = None
         self._clientid = None
@@ -242,9 +242,9 @@ class RabbitmqClient(object):
 
         """
 
-        LOGGER.info('[RabbitMqClient] Declaring exchange : %s ' % self.config.exchange)
-        self._channel.exchange_declare(exchange=self.config.exchange,
-                                       exchange_type=self.config.exchange_type,
+        LOGGER.info('[RabbitMqClient] Declaring exchange : %s ' % self.conf.exchange)
+        self._channel.exchange_declare(exchange=self.conf.exchange,
+                                       exchange_type=self.conf.exchange_type,
                                        durable=True,
                                        auto_delete=False,
                                        callback=self.on_exchange_declareok)
@@ -288,7 +288,7 @@ class RabbitmqClient(object):
         """
 
         LOGGER.info('[RabbitMqClient] Queue declared')
-        self.bind_queue(self.config.binding_key)
+        self.bind_queue(self.conf.binding_key)
 
     def bind_queue(self, binding_key):
         """In this method we will bind the queue
@@ -301,11 +301,11 @@ class RabbitmqClient(object):
         """
 
         LOGGER.info('[RabbitMqClient] Binding %s to %s with %s ' %
-                    (self.config.exchange, self._queue, binding_key))
+                    (self.conf.exchange, self._queue, binding_key))
 
         self._channel.queue_bind(callback=self.on_bindok,
                                  queue=self._queue,
-                                 exchange=self.config.exchange,
+                                 exchange=self.conf.exchange,
                                  routing_key=binding_key,
                                  arguments=None)
 
@@ -380,7 +380,7 @@ class RabbitmqClient(object):
         LOGGER.info('[RabbitMqClient] Published %i messages, %i have yet to be confirmed, %i were acked and %i were nacked ' % (
             self._message_number, len(self._deliveries), self._acked, self._nacked))
 
-    def publish(self, msg):
+    def publish(self, msg, routing_key=None):
         """If the class is not stopping, publish a message to RabbitMQ,
         appending a list of deliveries with the message number that was sent.
         This list will be used to check for delivery confirmations in the
@@ -404,8 +404,8 @@ class RabbitmqClient(object):
         properties = BasicProperties(content_type='application/json', headers=msg, delivery_mode=2, app_id=self._person)
 
         msg = json.dumps(msg, ensure_ascii=False)
-        self._channel.basic_publish(exchange=self.config.exchange,
-                                    routing_key=self.config.routing_key,
+        self._channel.basic_publish(exchange=self.conf.exchange,
+                                    routing_key=self.conf.routing_key if routing_key is None else routing_key,
                                     body=msg,
                                     properties=properties)
 
@@ -575,3 +575,6 @@ class RabbitmqClient(object):
         self.stop_consuming()
 
         LOGGER.info('[RabbitMqClient] RabbitMQClient Stopped')
+
+    def get_routing_key(self, text):
+        return self.conf.bot_routing_key if text.startswith(self.conf.bot_routing_key) else None
