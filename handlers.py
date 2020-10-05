@@ -61,10 +61,10 @@ class ChatroomWSHandler(SockJSConnection):
 
         # Initialize new pika rabbitmq client object for this websocket.
         config = RabbitMqConfig()
-        self.rabbit_client = RabbitmqClient(config)
+        self.rabbit_client = RabbitmqClient(self, config)
         # Assign websocket object to a Pika client object attribute.
         websocketParticipants.add(self)
-        self.rabbit_client.websocket = self
+        # self.rabbit_client.websocket = self
         # connect to rabbitmq
         self.rabbit_client.start()
 
@@ -137,3 +137,6 @@ class ChatroomWSHandler(SockJSConnection):
 
     def genid(self):
         return str(uuid.uuid1())
+
+    def handle_queue_event(self, body):
+        self.send(body)

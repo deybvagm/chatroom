@@ -34,7 +34,7 @@ class RabbitmqClient(object):
 
     """
 
-    def __init__(self, params=None):
+    def __init__(self, participant, params):
         """Create a new instance of the consumer class, passing in the AMQP
         URL used to connect to RabbitMQ.
         :param params: connection paramaters used to connect with rabbitmq broker server
@@ -53,7 +53,7 @@ class RabbitmqClient(object):
         self._message_number = 0
         self._parameters = ConnectionParameters(host=self.config.host, port=self.config.port, virtual_host='/')
         self._queue = self.config.queue
-        self.websocket = None
+        self.participant = participant
         self._person = None
         self._clientid = None
         self._participants = 0
@@ -156,8 +156,8 @@ class RabbitmqClient(object):
             self._consumer_tag = None
         if self._queue:
             self._queue = None
-        if self.websocket:
-            self.websocket = None
+        if self.participant:
+            self.participant = None
 
         self._parameters = None
         self._credentials = None
@@ -430,11 +430,11 @@ class RabbitmqClient(object):
                                                          queue=self._queue,
                                                          exclusive=True,
                                                          )
-        LOGGER.info('[RabbitMqClient] rabbit client can now publish/consume msessag.\nSending first msg to websocket...')
+        # LOGGER.info('[RabbitMqClient] rabbit client can now publish/consume msessag.\nSending first msg to websocket...')
 
-        m = {'msg_type': 'rabbitmqOK'}
-
-        self.websocket.send(json.dumps(m))
+        # m = {'msg_type': 'rabbitmqOK'}
+        #
+        # self.websocket.send(json.dumps(m))
 
     def add_on_cancel_callback(self):
         """Add a callback that will be invoked if RabbitMQ cancels the consumer
@@ -498,9 +498,9 @@ class RabbitmqClient(object):
 
         else:
             LOGGER.info(
-                '[RabbitMqClient] sending the message to corresponsding websoket: %s ' % self.websocket)
+                '[RabbitMqClient] sending the message to corresponsding websoket: %s ' % self.participant)
 
-            self.websocket.send(body)
+            self.participant.handle_queue_event(body)
 
     def acknowledge_message(self, delivery_tag):
         """Acknowledge the message delivery from RabbitMQ by sending a
