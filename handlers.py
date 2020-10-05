@@ -6,7 +6,7 @@ import logging
 import uuid
 
 from pubsub import RabbitmqClient
-from rabbitmq_config import RabbitMqConfig
+from config import Config
 
 LOGGER = logging.getLogger(__name__)
 
@@ -60,12 +60,9 @@ class ChatroomWSHandler(SockJSConnection):
         LOGGER.info('[ChatWebsocketHandler] Websocket connection opened: %s ' % self)
 
         # Initialize new pika rabbitmq client object for this websocket.
-        config = RabbitMqConfig()
+        config = Config()
         self.rabbit_client = RabbitmqClient(self, config)
-        # Assign websocket object to a Pika client object attribute.
         websocketParticipants.add(self)
-        # self.rabbit_client.websocket = self
-        # connect to rabbitmq
         self.rabbit_client.start()
 
     def on_message(self, message):
@@ -83,8 +80,8 @@ class ChatroomWSHandler(SockJSConnection):
         LOGGER.info('[ChatWebsocketHandler] message received on Websocket: %s ' % self)
 
         res = json_decode(message)
-        routing_key = res['routing_key']
         msg = res['msg']
+
         stage = msg['stage']
 
         if stage == 'start':
@@ -103,7 +100,7 @@ class ChatroomWSHandler(SockJSConnection):
 
         LOGGER.info('[ChatWebsocketHandler] Publishing the received message to RabbitMQ')
 
-        self.rabbit_client.publish(msg, routing_key)
+        self.rabbit_client.publish(msg)
 
     def on_close(self):
         """

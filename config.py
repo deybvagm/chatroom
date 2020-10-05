@@ -1,9 +1,9 @@
 import uuid
-class RabbitMqConfig:
-    def __init__(self, host='localhost', queue='chatroom1', port=5672, exchange='chatexchange',
-                 exchange_type='topic', binding_key='public.*'):
 
-        """ Server initialization   """
+
+class Config:
+    def __init__(self, host='localhost', port=5672, exchange='chatexchange',
+                 exchange_type='topic', binding_key='public.*', routing_key='public.*'):
 
         self.host = host
         self.queue = 'queue' + str(uuid.uuid4())
@@ -11,3 +11,4 @@ class RabbitMqConfig:
         self.exchange = exchange
         self.exchange_type = exchange_type
         self.binding_key = binding_key
+        self.routing_key = routing_key

@@ -380,7 +380,7 @@ class RabbitmqClient(object):
         LOGGER.info('[RabbitMqClient] Published %i messages, %i have yet to be confirmed, %i were acked and %i were nacked ' % (
             self._message_number, len(self._deliveries), self._acked, self._nacked))
 
-    def publish(self, msg, routing_key):
+    def publish(self, msg):
         """If the class is not stopping, publish a message to RabbitMQ,
         appending a list of deliveries with the message number that was sent.
         This list will be used to check for delivery confirmations in the
@@ -405,7 +405,7 @@ class RabbitmqClient(object):
 
         msg = json.dumps(msg, ensure_ascii=False)
         self._channel.basic_publish(exchange=self.config.exchange,
-                                    routing_key=routing_key,
+                                    routing_key=self.config.routing_key,
                                     body=msg,
                                     properties=properties)
 
