@@ -34,7 +34,7 @@ class RabbitmqClient(object):
 
     """
 
-    def __init__(self, participant, params):
+    def __init__(self, participant, params, username=None):
         """Create a new instance of the consumer class, passing in the AMQP
         URL used to connect to RabbitMQ.
         :param params: connection paramaters used to connect with rabbitmq broker server
@@ -54,9 +54,8 @@ class RabbitmqClient(object):
         self._parameters = ConnectionParameters(host=self._conf.host, port=self._conf.port, virtual_host='/')
         self._queue = self._conf.queue
         self.participant = participant
-        self._person = None
-        self._clientid = None
-        self._participants = 0
+        self._username = username
+        self._n_users = 0
 
 
     def connect(self):
@@ -161,7 +160,7 @@ class RabbitmqClient(object):
 
         self._parameters = None
         self._credentials = None
-        self._person = None
+        self._username = None
 
         LOGGER.info('[RabbitMqClient] rabbitmq connection cosed')
 
@@ -401,7 +400,9 @@ class RabbitmqClient(object):
 
         LOGGER.info('[RabbitMqClient] Publishing message')
 
-        properties = BasicProperties(content_type='application/json', headers=msg, delivery_mode=2, app_id=self._person)
+        msg['name'] = self._username
+
+        properties = BasicProperties(content_type='application/json', headers=msg, delivery_mode=2, app_id=self._username)
 
         msg = json.dumps(msg, ensure_ascii=False)
         self._channel.basic_publish(exchange=self._conf.exchange,
@@ -489,7 +490,7 @@ class RabbitmqClient(object):
         # acknowledge the messge received
         self.acknowledge_message(basic_deliver.delivery_tag)
 
-        if stage == 'stop' and self._person == json_decoded_body['name']:
+        if stage == 'stop' and self._username == json_decoded_body['name']:
             LOGGER.warning(
                 '[RabbitMqClient] skipping sending message to websocket since webscoket is closed.')
             LOGGER.info('[RabbitMqClient] initating closing of rabbitmq Client Connection.....')
@@ -581,3 +582,7 @@ class RabbitmqClient(object):
 
     def get_config(self):
         return self._conf
+
+    def update_info(self, username, n_users):
+        self._username = username
+        self._n_users = n_users

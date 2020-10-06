@@ -3,7 +3,6 @@ from tornado.web import RequestHandler
 from tornado.escape import json_decode
 from sockjs.tornado import SockJSConnection
 import logging
-import uuid
 
 from pubsub import RabbitmqClient
 from config import Config
@@ -57,7 +56,7 @@ class ChatroomWSHandler(SockJSConnection):
 
         """
 
-        LOGGER.info('[ChatWebsocketHandler] Websocket connection opened: %s ' % self)
+        LOGGER.info('[ChatroomWSHandler] Websocket connection opened: %s ' % self)
 
         config = Config()
         self.rabbit_client = RabbitmqClient(self, config)
@@ -76,30 +75,14 @@ class ChatroomWSHandler(SockJSConnection):
 
         """
 
-        LOGGER.info('[ChatWebsocketHandler] message received on Websocket: %s ' % self)
-
+        LOGGER.info('[ChatroomWSHandler] message received on Websocket: %s ' % self)
         res = json_decode(message)
         msg = res['msg']
         routing_key = self.rabbit_client.get_routing_key(msg['msg'])
+        self.rabbit_client.update_info(username=msg['name'], n_users=len(websocketParticipants))
+        msg['participants'] = len(websocketParticipants)
 
-        stage = msg['stage']
-
-        if stage == 'start':
-            LOGGER.info('[ChatWebsocketHandler] Message Stage : START')
-
-            name = msg['name']
-            # assign name to rabbit client
-            self.rabbit_client._person = name
-            # assign clientid to rabbit client
-            self.rabbit_client._clientid = self.genid()
-            # add no. of current participants/websocket connections
-            self.rabbit_client._participants = len(websocketParticipants)
-            msg['participants'] = len(websocketParticipants)
-
-        msg['clientid'] = self.rabbit_client._clientid
-
-        LOGGER.info('[ChatWebsocketHandler] Publishing the received message to RabbitMQ')
-
+        LOGGER.info('[ChatroomWSHandler] Publishing the received message to RabbitMQ: %s ' % msg)
         self.rabbit_client.publish(msg, routing_key)
 
     def on_close(self):
@@ -111,14 +94,13 @@ class ChatroomWSHandler(SockJSConnection):
         :return:     Doesn't return anything, except a confirmation of closed connection back to web app.
         """
 
-        LOGGER.info('[ChatWebsocketHandler] Websocket conneciton close event %s ' % self)
+        LOGGER.info('[ChatroomWSHandler] Websocket conneciton close event %s ' % self)
 
         msg = {
-            'name': self.rabbit_client._person,
+            'name': self.rabbit_client._username,
             'stage': 'stop',
             'msg_type': 'public',
-            'msg': self.rabbit_client._person + ' left',
-            'clientid': self.rabbit_client._clientid,
+            'msg': self.rabbit_client._username + ' left',
             'participants': len(websocketParticipants) - 1
         }
 
@@ -130,10 +112,7 @@ class ChatroomWSHandler(SockJSConnection):
         # removing the connection of global list
         websocketParticipants.remove(self)
 
-        LOGGER.info('[ChatWebsocketHandler] Websocket connection closed')
-
-    def genid(self):
-        return str(uuid.uuid1())
+        LOGGER.info('[ChatroomWSHandler] Websocket connection closed')
 
     def handle_queue_event(self, body):
         self.send(body)

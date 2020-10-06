@@ -14,6 +14,7 @@ define("port", default=5672, help="port for Rabbitmq", type=int)
 define("binding_key", default='/stock', help="binding_key for Rabbitmq", type=str)
 define("routing_key", default='public.*', help="routing key for Rabbitmq", type=str)
 define("api_url", default='https://stooq.com/q/l/?s=STOCK_CODE&f=sd2t2ohlcv&h&e=csv', help="api for stock", type=str)
+define("bot", default='financial bot', help="name for the bot", type=str)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ LOGGER = logging.getLogger(__name__)
 class BotHandler:
     def __init__(self, config):
         LOGGER.info('[BotHandler] initiating bot')
-        self.rabbit_client = RabbitmqClient(self, config)
+        self.rabbit_client = RabbitmqClient(self, config, username=options.bot)
         self.rabbit_client.start()
         IOLoop.current().start()
 
@@ -31,7 +32,6 @@ class BotHandler:
         stock_code = data['msg'].split('=')[1]
         url = self.rabbit_client.get_config().api_url
         response = request_stock(url, stock_code)
-        data['name'] = 'bot'
         data['msg'] = response
         self.rabbit_client.publish(data)
 
