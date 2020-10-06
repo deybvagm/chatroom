@@ -1,7 +1,13 @@
 from tornado.web import URLSpec
 
+import csv
+import urllib.request
+import codecs
+
+
 def unpack(first, *rest):
     return first, rest
+
 
 def include(prefix, module_path):
     module = __import__(module_path, globals(), locals(), fromlist=["*"])
@@ -16,3 +22,16 @@ def include(prefix, module_path):
             pattern = r"%s%s" % (prefix, pattern)
         final_urls.append(URLSpec(pattern, url.handler_class, kwargs=url.kwargs, name=url.name))
     return final_urls
+
+
+def request_stock(url, stock_code):
+    ftpstream = urllib.request.urlopen(url.replace('STOCK_CODE', stock_code))
+    csvfile = csv.reader(codecs.iterdecode(ftpstream, 'utf-8'))
+    return build_message(csvfile)
+
+
+def build_message(csvfile):
+    next(csvfile)
+    line = next(csvfile)
+    text = '{} quote is ${} per share'.format(line[0], line[6]) if line[6] != 'N/D' else 'Not recognized stock code'
+    return text

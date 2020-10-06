@@ -59,7 +59,6 @@ class ChatroomWSHandler(SockJSConnection):
 
         LOGGER.info('[ChatWebsocketHandler] Websocket connection opened: %s ' % self)
 
-        # Initialize new pika rabbitmq client object for this websocket.
         config = Config()
         self.rabbit_client = RabbitmqClient(self, config)
         websocketParticipants.add(self)
@@ -82,8 +81,6 @@ class ChatroomWSHandler(SockJSConnection):
         res = json_decode(message)
         msg = res['msg']
         routing_key = self.rabbit_client.get_routing_key(msg['msg'])
-        print(msg['msg'])
-        print(routing_key)
 
         stage = msg['stage']
 
