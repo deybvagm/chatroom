@@ -12,9 +12,9 @@ logging.basicConfig(level=logging.INFO)
 define("host", default='localhost', help="host for the Rabbitmq server", type=str)
 define("port", default=5672, help="port for Rabbitmq", type=int)
 define("binding_key", default='/stock', help="binding_key for Rabbitmq", type=str)
-define("routing_key", default='public.*', help="routing key for Rabbitmq", type=str)
+define("routing_key", default='public', help="routing key for Rabbitmq", type=str)
 define("api_url", default='https://stooq.com/q/l/?s=STOCK_CODE&f=sd2t2ohlcv&h&e=csv', help="api for stock", type=str)
-define("bot", default='financial bot', help="name for the bot", type=str)
+define("bot", default='bot', help="name for the bot", type=str)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ LOGGER = logging.getLogger(__name__)
 class BotHandler:
     def __init__(self, config):
         LOGGER.info('[BotHandler] initiating bot')
+        self.api_url = options.api_url
         self.rabbit_client = RabbitmqClient(self, config, username=options.bot)
         self.rabbit_client.start()
         IOLoop.current().start()
@@ -30,17 +31,16 @@ class BotHandler:
         LOGGER.info('[BotHandler] Bot detected a request for stock')
         data = json_decode(data)
         stock_code = data['msg'].split('=')[1]
-        url = self.rabbit_client.get_config().api_url
-        response = request_stock(url, stock_code)
+        response = request_stock(self.api_url, stock_code)
         data['msg'] = response
+        data['name'] = self.rabbit_client.get_username()
         self.rabbit_client.publish(data)
 
 
 if __name__ == "__main__":
     parse_command_line()
     config = Config(
-        host=options.host, port=options.port, binding_key=options.binding_key,
-        routing_key=options.routing_key, api_url=options.api_url
+        host=options.host, port=options.port, binding_key=options.binding_key, routing_key=options.routing_key
     )
     LOGGER.info("\n[BotHandler] Starting bot.\n")
     bot = BotHandler(config)

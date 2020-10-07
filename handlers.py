@@ -6,6 +6,7 @@ import logging
 
 from pubsub import RabbitmqClient
 from config import Config
+from utils import build_leaving_message
 
 LOGGER = logging.getLogger(__name__)
 
@@ -93,22 +94,11 @@ class ChatroomWSHandler(SockJSConnection):
 
         LOGGER.info('[ChatroomWSHandler] Websocket conneciton close event %s ' % self)
 
-        msg = {
-            'name': self.rabbit_client._username,
-            'stage': 'stop',
-            'msg_type': 'public',
-            'msg': self.rabbit_client._username + ' left',
-            'participants': len(websocketParticipants) - 1
-        }
-
-        routing_key = 'public.*'
-
-        # publishing the close connection info to rest of the rabbitmq subscribers/clients
-        self.rabbit_client.publish(msg, routing_key)
-
-        # removing the connection of global list
+        user = self.rabbit_client.get_username()
+        routing_key = self.rabbit_client.get_routing_key('')
+        msg = build_leaving_message(user, routing_key, len(websocketParticipants))
+        self.rabbit_client.publish(msg)
         websocketParticipants.remove(self)
-
         LOGGER.info('[ChatroomWSHandler] Websocket connection closed')
 
     def handle_queue_event(self, body):

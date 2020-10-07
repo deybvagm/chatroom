@@ -35,3 +35,13 @@ def build_message(csvfile):
     line = next(csvfile)
     text = '{} quote is ${} per share'.format(line[0], line[6]) if line[6] != 'N/D' else 'Not recognized stock code'
     return text
+
+
+def build_leaving_message(user, routing_key, n_users):
+    return {
+        'name': user,
+        'stage': 'stop',
+        'msg_type': routing_key,
+        'msg': user + ' left',
+        'participants': n_users - 1
+    }

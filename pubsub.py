@@ -582,3 +582,6 @@ class RabbitmqClient(object):
     def update_info(self, username, n_users):
         self._username = username
         self._n_users = n_users
+
+    def get_username(self):
+        return self._username
