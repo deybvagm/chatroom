@@ -4,8 +4,8 @@ from tornado.escape import json_decode
 from sockjs.tornado import SockJSConnection
 import logging
 
-from pubsub import RabbitmqClient
-from config import Config
+from rabbitmq.pubsub import RabbitmqClient
+from config.config import Config
 from utils import build_leaving_message
 
 LOGGER = logging.getLogger(__name__)

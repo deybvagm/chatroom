@@ -4,7 +4,7 @@ from sockjs.tornado import SockJSRouter
 
 from settings import settings
 from utils import include
-from handlers import ChatroomWSHandler
+from handlers.ws_handler import ChatroomWSHandler
 
 
 # Register SocjJsRouter Connection
