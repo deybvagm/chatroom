@@ -78,12 +78,9 @@ class ChatroomWSHandler(SockJSConnection):
         LOGGER.info('[ChatroomWSHandler] message received on Websocket: %s ' % self)
         res = json_decode(message)
         msg = res['msg']
-        routing_key = self.rabbit_client.get_routing_key(msg['msg'])
-        self.rabbit_client.update_info(username=msg['name'], n_users=len(websocketParticipants))
         msg['participants'] = len(websocketParticipants)
-
         LOGGER.info('[ChatroomWSHandler] Publishing the received message to RabbitMQ: %s ' % msg)
-        self.rabbit_client.publish(msg, routing_key)
+        self.rabbit_client.publish(msg)
 
     def on_close(self):
         """

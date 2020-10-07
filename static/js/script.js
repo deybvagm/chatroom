@@ -70,7 +70,7 @@ $(document).ready(function() {
             $('#status').text('Offline').removeClass('active').addClass('inactive');
             $('#connect').text('Connect');
         } else {
-            $('#status').text('Online - ' + conn.protocol).removeClass('inactive').addClass('active');
+            $('#status').text('Online').removeClass('inactive').addClass('active');
             $('#connect').text('Disconnect');
         }
     }
@@ -97,7 +97,7 @@ $(document).ready(function() {
         }).get();
 
         // sockjs connection object created
-        conn = new SockJS('http://' + window.location.host + '/chat', transports);
+        conn = new SockJS('http://' + window.location.host + '/chat');
 
         $('.welcome code').text('Connecting...');
 
@@ -115,9 +115,9 @@ $(document).ready(function() {
                 sendmsg('public.*', person, 'start', person + ' joined', 'public');
             } else if (msg_type === 'public') {
                 print(m);
-            } else if (msg_type === 'private') {
+            } /*else if (msg_type === 'private') {
                 handlePrivateMsg(m);
-            }
+            }*/
         };
 
         // sockjs on Close event triggered whenever there is a close event either triggered by

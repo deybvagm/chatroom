@@ -379,7 +379,7 @@ class RabbitmqClient(object):
         LOGGER.info('[RabbitMqClient] Published %i messages, %i have yet to be confirmed, %i were acked and %i were nacked ' % (
             self._message_number, len(self._deliveries), self._acked, self._nacked))
 
-    def publish(self, msg, routing_key=None):
+    def publish(self, msg):
         """If the class is not stopping, publish a message to RabbitMQ,
         appending a list of deliveries with the message number that was sent.
         This list will be used to check for delivery confirmations in the
@@ -392,21 +392,17 @@ class RabbitmqClient(object):
         class.
 
         :param msg: Message to be published to Channel
-        :tyep msg: string
-        :param routing_key: Routing Key to direct message via the Exchange
-        :type routing_key: string
+        :type msg: string
 
         """
 
         LOGGER.info('[RabbitMqClient] Publishing message')
-
-        msg['name'] = self._username
-
+        self.update_info(username=msg['name'], n_users=msg['participants'])
+        routing_key = self.get_routing_key(msg['msg'])
         properties = BasicProperties(content_type='application/json', headers=msg, delivery_mode=2, app_id=self._username)
-
         msg = json.dumps(msg, ensure_ascii=False)
         self._channel.basic_publish(exchange=self._conf.exchange,
-                                    routing_key=self._conf.routing_key if routing_key is None else routing_key,
+                                    routing_key=routing_key,
                                     body=msg,
                                     properties=properties)
 
@@ -578,7 +574,7 @@ class RabbitmqClient(object):
         LOGGER.info('[RabbitMqClient] RabbitMQClient Stopped')
 
     def get_routing_key(self, text):
-        return self._conf.bot_routing_key if text.startswith(self._conf.bot_routing_key) else None
+        return self._conf.bot_routing_key if text.startswith(self._conf.bot_routing_key) else self._conf.routing_key
 
     def get_config(self):
         return self._conf
