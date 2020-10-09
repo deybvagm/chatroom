@@ -40,6 +40,7 @@ $(document).ready(function() {
     var TYPING_TIMER_LENGTH = 1000;     // in ms
     var $messages = $('.messages');     // Messages area
     var msgcount = 0;                   // currently of no use. can used in your own way.
+    var msglimit = 50;
     var colorcount = 0;                 // No of usernames ( keeps on adding even if user leaves chat)
     var personcolor = {};               // Color set array for different usernames picked from colorset
     // The color set for usernames
@@ -200,7 +201,7 @@ $(document).ready(function() {
             log(p['msg']);
             updateParticipants(p['participants']);
         } 
-        else if (s === 'start_typing') {
+        /*else if (s === 'start_typing') {
             if (personcolor[clientid] === undefined) {
                 setUsernameColor(clientid);
             }
@@ -215,7 +216,7 @@ $(document).ready(function() {
             if (n !== person) {
                 removeChatTyping(p);
             }
-        }
+        }*/
         chatbox.scrollTop(chatbox.scrollTop() + 10000);
         $('.public .groupchatTB #groupcount').text(p['participants']);
     }
@@ -283,6 +284,10 @@ $(document).ready(function() {
             options.fade = false;
             $typingMessages.remove();
         }
+        if (msgcount > msglimit){
+            divid = msgcount - msglimit;
+            removemsg(divid);
+        }
         var tm = new Date().toString("hh:mm tt");
         var typingClass = data.typing ? 'typing' : '';
         var timeTypingClass = data.typing ? 'timeTyping' : '';
@@ -290,8 +295,12 @@ $(document).ready(function() {
         var $usernameDiv = $('<p class="username"/>').text(data['name']).css('color', personcolor[data['clientid']]);
         var $messageBodyDiv = $('<span class="messageBody">').text(data['msg']);
         var $messageDiv = $usernameDiv.append($messageBodyDiv);
-        var $messageDivFinal = $('<li class="message"/>').attr('clientid', data['clientid']).addClass(typingClass).append($timeinfoDiv, $messageDiv);
+        var $messageDivFinal = $('<li class="message" id="messageli' + msgcount + '"/>').attr('clientid', data['clientid']).addClass(typingClass).append($timeinfoDiv, $messageDiv);
         echomsg($messageDivFinal, options);
+    }
+
+    function removemsg(divid) {
+        $('#messageli' + divid).remove();
     }
 
 
@@ -399,7 +408,7 @@ $(document).ready(function() {
 
     //  sends the message content to sendmsg -> which actually sends msg to the connection
     function formsubmit(typ) {
-        sendmsg(typ + '.*', person, 'stop_typing', '', typ);
+        //sendmsg(typ + '.*', person, 'stop_typing', '', typ);
         typing = false;
         var v = $('#' + typ + 'text').val();
         sendmsg(typ + '.*', person, 'msg', v, typ);
@@ -409,14 +418,14 @@ $(document).ready(function() {
 
 
     // triggers whenever user is Typing...
-    $('.box .inpbox').on('keypress', function() {
+    /*$('.box .inpbox').on('keypress', function() {
         var typ = $(this).attr('data');
         updateTyping(typ);
-    });
+    });*/
 
 
     // called to update typing status whenever user is typing event is triggered
-    function updateTyping(typ) {
+    /*function updateTyping(typ) {
         if (conn !== null) {
             if (typing === false) {
                 typing = true;
@@ -432,7 +441,7 @@ $(document).ready(function() {
                 }
             }, TYPING_TIMER_LENGTH);
         }
-    }
+    }*/
 
 
     // sends the actual msg after JSONifying it to the connection via conn.send()
@@ -460,9 +469,4 @@ $(document).ready(function() {
         return x + y;
     };
 
-//    class Tommy {
-//        constructer {
-//
-//        }
-//    }
 });
