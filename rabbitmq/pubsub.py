@@ -480,24 +480,9 @@ class RabbitmqClient(object):
         LOGGER.info('[RabbitMqClient] Received message # %s from %s : %s ' %
                     (basic_deliver.delivery_tag, properties.app_id, body))
 
-        json_decoded_body = json.loads(body)
-        stage = json_decoded_body['stage']
-
         # acknowledge the messge received
         self.acknowledge_message(basic_deliver.delivery_tag)
-
-        if stage == 'stop' and self._username == json_decoded_body['name']:
-            LOGGER.warning(
-                '[RabbitMqClient] skipping sending message to websocket since webscoket is closed.')
-            LOGGER.info('[RabbitMqClient] initating closing of rabbitmq Client Connection.....')
-
-            self.stop()
-
-        else:
-            LOGGER.info(
-                '[RabbitMqClient] sending the message to corresponsding websoket: %s ' % self.participant)
-
-            self.participant.handle_queue_event(body)
+        self.participant.handle_queue_event(body)
 
     def acknowledge_message(self, delivery_tag):
         """Acknowledge the message delivery from RabbitMQ by sending a

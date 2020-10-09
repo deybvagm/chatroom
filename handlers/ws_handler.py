@@ -3,6 +3,7 @@ from tornado.web import RequestHandler
 from tornado.escape import json_decode
 from sockjs.tornado import SockJSConnection
 import logging
+import json
 
 from rabbitmq.pubsub import RabbitmqClient
 from config.config import Config
@@ -102,4 +103,11 @@ class ChatroomWSHandler(SockJSConnection):
         LOGGER.info('[ChatroomWSHandler] Websocket connection closed')
 
     def handle_queue_event(self, body):
-        self.send(body)
+        json_decoded_body = json.loads(body)
+        stage = json_decoded_body['stage']
+        if stage == 'stop':
+            LOGGER.warning('[ChatroomWSHandler] skipping sending message to websocket since webscoket is closed.')
+            self.rabbit_client.stop()
+        else:
+            LOGGER.info('[ChatroomWSHandler] sending the message to corresponsding websoket')
+            self.send(body)
