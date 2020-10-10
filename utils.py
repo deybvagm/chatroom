@@ -3,6 +3,7 @@ from tornado.web import URLSpec
 import csv
 import urllib.request
 import codecs
+import json
 
 
 def unpack(first, *rest):
@@ -53,3 +54,12 @@ def get_stock_code(text):
 
 def get_destinate(text):
     return text.split('=')[0]
+
+
+def extract_info_from_message(message, n_users):
+    msg = message['msg']
+    msg['participants'] = n_users
+    user = msg['name']
+    destinate = get_destinate(msg['msg'])
+    msg = json.dumps(msg, ensure_ascii=False)
+    return msg, user, destinate
