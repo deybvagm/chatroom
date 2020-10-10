@@ -45,3 +45,11 @@ def build_leaving_message(user, routing_key, n_users):
         'msg': user + ' left',
         'participants': n_users - 1
     }
+
+
+def get_stock_code(text):
+    return text.split('=')[1]
+
+
+def get_destinate(text):
+    return text.split('=')[0]

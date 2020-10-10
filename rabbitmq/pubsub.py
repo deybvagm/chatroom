@@ -10,7 +10,6 @@ basic cancel requests and also add callbacks for various other events.
 
 from pika.adapters.tornado_connection import TornadoConnection
 from pika import ConnectionParameters, BasicProperties
-import json
 import logging
 
 LOGGER = logging.getLogger(__name__)
@@ -34,7 +33,7 @@ class RabbitmqClient(object):
 
     """
 
-    def __init__(self, participant, params, username=None):
+    def __init__(self, participant, params):
         """Create a new instance of the consumer class, passing in the AMQP
         URL used to connect to RabbitMQ.
         :param params: connection paramaters used to connect with rabbitmq broker server
@@ -54,8 +53,6 @@ class RabbitmqClient(object):
         self._parameters = ConnectionParameters(host=self._conf.host, port=self._conf.port, virtual_host='/')
         self._queue = self._conf.queue
         self.participant = participant
-        self._username = username
-        self._n_users = 0
 
 
     def connect(self):
@@ -159,8 +156,6 @@ class RabbitmqClient(object):
             self.participant = None
 
         self._parameters = None
-        self._credentials = None
-        self._username = None
 
         LOGGER.info('[RabbitMqClient] rabbitmq connection cosed')
 
@@ -379,7 +374,7 @@ class RabbitmqClient(object):
         LOGGER.info('[RabbitMqClient] Published %i messages, %i have yet to be confirmed, %i were acked and %i were nacked ' % (
             self._message_number, len(self._deliveries), self._acked, self._nacked))
 
-    def publish(self, msg):
+    def publish(self, msg, routing_key, app_id):
         """If the class is not stopping, publish a message to RabbitMQ,
         appending a list of deliveries with the message number that was sent.
         This list will be used to check for delivery confirmations in the
@@ -392,15 +387,14 @@ class RabbitmqClient(object):
         class.
 
         :param msg: Message to be published to Channel
-        :type msg: string
+        :param app_id:
+        :param routing_key:
 
         """
 
         LOGGER.info('[RabbitMqClient] Publishing message')
-        self.update_info(username=msg['name'], n_users=msg['participants'])
-        routing_key = self.get_routing_key(msg['msg'])
-        properties = BasicProperties(content_type='application/json', headers=msg, delivery_mode=2, app_id=self._username)
-        msg = json.dumps(msg, ensure_ascii=False)
+        routing_key = self._conf.routing_key if routing_key is None else routing_key
+        properties = BasicProperties(content_type='application/json', delivery_mode=2, app_id=app_id)
         self._channel.basic_publish(exchange=self._conf.exchange,
                                     routing_key=routing_key,
                                     body=msg,
@@ -557,16 +551,3 @@ class RabbitmqClient(object):
         self.stop_consuming()
 
         LOGGER.info('[RabbitMqClient] RabbitMQClient Stopped')
-
-    def get_routing_key(self, text):
-        return self._conf.bot_routing_key if text.startswith(self._conf.bot_routing_key) else self._conf.routing_key
-
-    def get_config(self):
-        return self._conf
-
-    def update_info(self, username, n_users):
-        self._username = username
-        self._n_users = n_users
-
-    def get_username(self):
-        return self._username
