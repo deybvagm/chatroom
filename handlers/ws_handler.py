@@ -5,6 +5,8 @@ from tornado.escape import json_decode
 import logging
 
 from handlers.chat_participant import ChatParticipant
+from rabbitmq.pubsub import RabbitmqClient
+from config.config import Config
 
 LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +59,9 @@ class ChatroomWSHandler(SockJSConnection):
 
         LOGGER.info('[ChatroomWSHandler] Websocket connection opened: %s ' % self)
         websocketParticipants.add(self)
-        self.chat_participant = ChatParticipant(username=None, message_cb=self.send_message)
+        config = Config()
+        self.chat_participant = ChatParticipant(username=None, message_cb=self.send_message,
+                                                message_broker=RabbitmqClient, config=config)
 
     def on_message(self, message):
         """

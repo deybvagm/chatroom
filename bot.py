@@ -1,6 +1,7 @@
 from tornado.options import define, options, parse_command_line
 from config.config import Config
 from handlers.bot_handler import BotHandler
+from rabbitmq.pubsub import RabbitmqClient
 
 define("host", default='localhost', help="host for the Rabbitmq server", type=str)
 define("port", default=5672, help="port for Rabbitmq", type=int)
@@ -15,6 +16,7 @@ if __name__ == "__main__":
     config = Config(
         host=options.host, port=options.port, binding_key=options.binding_key, routing_key=options.routing_key
     )
-    bot = BotHandler(config, options.api_url, bot_name=options.bot)
+
+    bot = BotHandler(options.api_url, bot_name=options.bot, config=config, message_broker=RabbitmqClient)
 
 
