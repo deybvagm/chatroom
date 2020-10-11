@@ -10,8 +10,8 @@ class BotHandler:
     def __init__(self, api_url, bot_name, config, message_broker):
         LOGGER.info('[BotHandler] initiating bot')
         self.api_url = api_url
-        self.rabbit_client = message_broker(self, config)
-        self.rabbit_client.start()
+        self.rabbit_client = message_broker(config)
+        self.rabbit_client.start(self.handle_queue_event)
         self._bot_name = bot_name
         IOLoop.current().start()
 

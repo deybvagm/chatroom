@@ -62,7 +62,7 @@ class TestApi(unittest.TestCase):
         config = Config()
 
         with patch.object(ChatParticipant, 'handle_queue_event') as mock:
-            client = ChatParticipant('peter', message_cb=my_function, message_broker=MessageBrokerTest, config=config)
+            client = ChatParticipant('jaz', message_cb=my_function, message_broker=MessageBrokerTest, config=config)
             client.handle_queue_event(message)
         mock.assert_called_once_with(message)
 

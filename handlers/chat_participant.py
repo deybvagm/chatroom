@@ -12,8 +12,8 @@ class ChatParticipant:
         self._nusers = 0
         self.message_cb = message_cb
         self._api_command = config.api_command
-        self.rabbit_client = message_broker(self, config)
-        self.rabbit_client.start()
+        self.rabbit_client = message_broker(config)
+        self.rabbit_client.start(self.handle_queue_event)
 
     def update_info(self, username, n_users):
         if self._username is None:

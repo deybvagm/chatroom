@@ -33,7 +33,7 @@ class RabbitmqClient(object):
 
     """
 
-    def __init__(self, participant, params):
+    def __init__(self, conf):
         """Create a new instance of the consumer class, passing in the AMQP
         URL used to connect to RabbitMQ.
         :param params: connection paramaters used to connect with rabbitmq broker server
@@ -41,7 +41,7 @@ class RabbitmqClient(object):
 
         """
 
-        self._conf = params
+        self._conf = conf
         self._connection = None
         self._channel = None
         self._closing = False
@@ -52,8 +52,8 @@ class RabbitmqClient(object):
         self._message_number = 0
         self._parameters = ConnectionParameters(host=self._conf.host, port=self._conf.port, virtual_host='/')
         self._queue = self._conf.queue
-        self.participant = participant
-
+        # self.participant = participant
+        self.handle_msg_cb = None
 
     def connect(self):
         """This method connects to RabbitMQ via the Torando Connectoin Adapter, returning the
@@ -152,8 +152,8 @@ class RabbitmqClient(object):
             self._consumer_tag = None
         if self._queue:
             self._queue = None
-        if self.participant:
-            self.participant = None
+        # if self.participant:
+        #     self.participant = None
 
         self._parameters = None
 
@@ -476,7 +476,8 @@ class RabbitmqClient(object):
 
         # acknowledge the messge received
         self.acknowledge_message(basic_deliver.delivery_tag)
-        self.participant.handle_queue_event(body)
+        self.handle_msg_cb(body)
+        # self.participant.handle_queue_event(body)
 
     def acknowledge_message(self, delivery_tag):
         """Acknowledge the message delivery from RabbitMQ by sending a
@@ -524,14 +525,14 @@ class RabbitmqClient(object):
         self.close_channel()
         self.close_connection()
 
-    def start(self):
+    def start(self, handle_msg_cb):
         """Run the example consumer by connecting to RabbitMQ and then
         starting the IOLoop to block and allow the SelectConnection to operate.
 
         """
 
         LOGGER.info('[RabbitMqClient] starting the rabbitmq connection')
-
+        self.handle_msg_cb = handle_msg_cb
         self._connection = self.connect()
 
     def stop(self):
