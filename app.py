@@ -23,7 +23,7 @@ class Application(tornado.web.Application):
 
 def main():
     container = Container()
-    container.config.from_yaml('config.yml')
+    container.config.from_yaml('config/config.yml')
     container.wire(modules=[ws_handler])
 
     tornado.options.parse_command_line()

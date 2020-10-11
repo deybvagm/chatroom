@@ -8,6 +8,6 @@ def run_bot(bot_handler=Provide[Container.bot_handler]):
 
 if __name__ == "__main__":
     container = Container()
-    container.config.from_yaml('config_bot.yml')
+    container.config.from_yaml('config/config_bot.yml')
     bot = container.bot_handler()
     bot.start()
