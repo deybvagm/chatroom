@@ -1,0 +1,9 @@
+host: "localhost"
+port: 5672
+exchange: "chatexchange"
+exchange_type: "topic"
+binding_key: "/stock"
+routing_key: "public"
+api_command: "/stock"
+api_url: "https://stooq.com/q/l/?s=STOCK_CODE&f=sd2t2ohlcv&h&e=csv"
+name: "bot"

@@ -7,12 +7,14 @@ LOGGER = logging.getLogger(__name__)
 
 
 class BotHandler:
-    def __init__(self, api_url, bot_name, config, message_broker):
+    def __init__(self, config, message_broker):
         LOGGER.info('[BotHandler] initiating bot')
-        self.api_url = api_url
-        self.rabbit_client = message_broker(config)
-        self.rabbit_client.start(self.handle_queue_event)
-        self._bot_name = bot_name
+        self.api_url = config['api_url']
+        self.message_broker = message_broker
+        self._bot_name = config['name']
+
+    def start(self):
+        self.message_broker.start(self.handle_queue_event)
         IOLoop.current().start()
 
     def handle_queue_event(self, body):
@@ -24,4 +26,4 @@ class BotHandler:
         data['name'] = self._bot_name
 
         msg = json.dumps(data, ensure_ascii=False)
-        self.rabbit_client.publish(msg, routing_key=None, app_id=self._bot_name)
+        self.message_broker.publish(msg, routing_key=None, app_id=self._bot_name)

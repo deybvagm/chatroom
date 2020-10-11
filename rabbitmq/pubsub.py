@@ -11,6 +11,7 @@ basic cancel requests and also add callbacks for various other events.
 from pika.adapters.tornado_connection import TornadoConnection
 from pika import ConnectionParameters, BasicProperties
 import logging
+import uuid
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,9 +51,8 @@ class RabbitmqClient(object):
         self._acked = 0
         self._nacked = 0
         self._message_number = 0
-        self._parameters = ConnectionParameters(host=self._conf.host, port=self._conf.port, virtual_host='/')
-        self._queue = self._conf.queue
-        # self.participant = participant
+        self._parameters = ConnectionParameters(host=self._conf['host'], port=self._conf['port'], virtual_host='/')
+        self._queue = str(uuid.uuid4())
         self.handle_msg_cb = None
 
     def connect(self):
@@ -152,8 +152,6 @@ class RabbitmqClient(object):
             self._consumer_tag = None
         if self._queue:
             self._queue = None
-        # if self.participant:
-        #     self.participant = None
 
         self._parameters = None
 
@@ -236,9 +234,9 @@ class RabbitmqClient(object):
 
         """
 
-        LOGGER.info('[RabbitMqClient] Declaring exchange : %s ' % self._conf.exchange)
-        self._channel.exchange_declare(exchange=self._conf.exchange,
-                                       exchange_type=self._conf.exchange_type,
+        LOGGER.info('[RabbitMqClient] Declaring exchange : %s ' % self._conf['exchange'])
+        self._channel.exchange_declare(exchange=self._conf['exchange'],
+                                       exchange_type=self._conf['exchange_type'],
                                        durable=True,
                                        auto_delete=False,
                                        callback=self.on_exchange_declareok)
@@ -282,7 +280,7 @@ class RabbitmqClient(object):
         """
 
         LOGGER.info('[RabbitMqClient] Queue declared')
-        self.bind_queue(self._conf.binding_key)
+        self.bind_queue(self._conf['binding_key'])
 
     def bind_queue(self, binding_key):
         """In this method we will bind the queue
@@ -295,11 +293,11 @@ class RabbitmqClient(object):
         """
 
         LOGGER.info('[RabbitMqClient] Binding %s to %s with %s ' %
-                    (self._conf.exchange, self._queue, binding_key))
+                    (self._conf['exchange'], self._queue, binding_key))
 
         self._channel.queue_bind(callback=self.on_bindok,
                                  queue=self._queue,
-                                 exchange=self._conf.exchange,
+                                 exchange=self._conf['exchange'],
                                  routing_key=binding_key,
                                  arguments=None)
 
@@ -393,9 +391,9 @@ class RabbitmqClient(object):
         """
 
         LOGGER.info('[RabbitMqClient] Publishing message')
-        routing_key = self._conf.routing_key if routing_key is None else routing_key
+        routing_key = self._conf['routing_key'] if routing_key is None else routing_key
         properties = BasicProperties(content_type='application/json', delivery_mode=2, app_id=app_id)
-        self._channel.basic_publish(exchange=self._conf.exchange,
+        self._channel.basic_publish(exchange=self._conf['exchange'],
                                     routing_key=routing_key,
                                     body=msg,
                                     properties=properties)
@@ -477,7 +475,6 @@ class RabbitmqClient(object):
         # acknowledge the messge received
         self.acknowledge_message(basic_deliver.delivery_tag)
         self.handle_msg_cb(body)
-        # self.participant.handle_queue_event(body)
 
     def acknowledge_message(self, delivery_tag):
         """Acknowledge the message delivery from RabbitMQ by sending a

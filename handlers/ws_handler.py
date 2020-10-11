@@ -4,9 +4,8 @@ from sockjs.tornado import SockJSConnection
 from tornado.escape import json_decode
 import logging
 
-from handlers.chat_participant import ChatParticipant
-from rabbitmq.pubsub import RabbitmqClient
-from config.config import Config
+from dependency_injector.wiring import Provide
+from containers import Container
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +44,9 @@ class ChatroomWSHandler(SockJSConnection):
     """ Websocket Handler implementing the sockjs Connection Class which will
     handle the websocket/sockjs connections.
     """
+    def __init__(self, session, chat_participant=Provide[Container.chat_participant]):
+        super().__init__(session)
+        self.chat_participant = chat_participant
 
     def on_open(self, info):
         """
@@ -59,9 +61,7 @@ class ChatroomWSHandler(SockJSConnection):
 
         LOGGER.info('[ChatroomWSHandler] Websocket connection opened: %s ' % self)
         websocketParticipants.add(self)
-        config = Config()
-        self.chat_participant = ChatParticipant(username=None, message_cb=self.send_message,
-                                                message_broker=RabbitmqClient, config=config)
+        self.chat_participant.setup(self.send_message, username=None)
 
     def on_message(self, message):
         """

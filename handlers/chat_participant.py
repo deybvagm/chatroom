@@ -7,13 +7,17 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ChatParticipant:
-    def __init__(self, username, message_cb, message_broker, config):
-        self._username = username
+    def __init__(self, message_broker, config):
+        self._username = None
         self._nusers = 0
-        self.message_cb = message_cb
-        self._api_command = config.api_command
-        self.rabbit_client = message_broker(config)
+        self.message_cb = None
+        self._api_command = config['api_command']
+        self.rabbit_client = message_broker
         self.rabbit_client.start(self.handle_queue_event)
+
+    def setup(self, message_cb, username):
+        self._username = username
+        self.message_cb = message_cb
 
     def update_info(self, username, n_users):
         if self._username is None:

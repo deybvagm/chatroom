@@ -3,6 +3,9 @@ import tornado.httpserver
 import tornado.web
 from tornado.options import define, options
 import logging
+from containers import Container
+
+from handlers import ws_handler
 
 from urls import urls
 from settings import settings
@@ -19,6 +22,10 @@ class Application(tornado.web.Application):
 
 
 def main():
+    container = Container()
+    container.config.from_yaml('config.yml')
+    container.wire(modules=[ws_handler])
+
     tornado.options.parse_command_line()
     app = Application()
     http_server = tornado.httpserver.HTTPServer(app)
