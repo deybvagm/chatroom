@@ -48,7 +48,7 @@ settings = {
     # 'login_url': '/login/',
 
     # xsrf_cookies: If true, Cross-site request forgery protection will be enabled.
-    'xsrf_cookies': True,
+    'xsrf_cookies': False,
 
     # twitter_consumer_key, twitter_consumer_secret,
     # friendfeed_consumer_key, friendfeed_consumer_secret,

@@ -3,7 +3,9 @@ from tornado.web import RequestHandler
 from sockjs.tornado import SockJSConnection
 from tornado.escape import json_decode
 import logging
+import json
 
+from handlers.auth import validate_authentication
 from dependency_injector.wiring import Provide
 from containers import Container
 
@@ -33,6 +35,13 @@ class IndexHandler(RequestHandler):
         self.render('index.html')
 
         LOGGER.info('[IndexHandler] index.html served')
+
+    def post(self):
+        user_info = json_decode(self.request.body)
+        nickname = user_info['user']
+        unchecked_pass = user_info['pass']
+        auth_response = 'ok' if validate_authentication(nickname, unchecked_pass) else 'error'
+        self.write(json.dumps({'msg': auth_response}))
 
 
 # no. of websocket connections

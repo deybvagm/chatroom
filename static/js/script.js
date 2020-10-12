@@ -3,20 +3,45 @@ $(document).ready(function() {
 
     // Global name of person
     var person = '';
+    var auth_url = 'http://localhost:9091'
+    var auth_data = {
+        user: null,
+        pass: null
+    }
 
 
     // Function to take the name of person until he selects a qualified name.
     // Calls repeatedly until name is selected.
     function myFunction() {
         person = prompt("What's your nickname?", "nick");
-        if (person === null) {
+        password = prompt("What's your password?", "123");
+        if (person === null | password === null) {
             myFunction();
-        } else if (person === '') {
+        } else if (person === '' | password === null) {
             myFunction();
-        } else if (person !== null) {
-            $('.welcome .welcomeLine').append($('<h2>').text('Welcome, '));
-            $('.welcome .welcomeLine').append($('<h3>').text(person + '.'));
-            $('.welcome').append($('<code>'));
+        } else if (person !== null & password !== null) {
+            auth_data.user = person;
+            auth_data.pass = btoa(password);
+
+            const params = {
+                headers: {"content-type":"application/json; charset=UTF-8"},
+                body: JSON.stringify(auth_data),
+                method: "POST"
+            };
+
+            fetch(auth_url, params)
+            .then(data=>{return data.json()})
+            .then(response=>{
+                if(response.msg === 'ok'){
+                    $('.welcome .welcomeLine').append($('<h2>').text('Welcome, '));
+                    $('.welcome .welcomeLine').append($('<h3>').text(person + '.'));
+                    $('.welcome').append($('<code>'));
+                }else{
+                    alert('Invalid credentials. Try again!');
+                    myFunction();
+                }
+            })
+            .catch(error=>console.log(error))
         }
     }
 
