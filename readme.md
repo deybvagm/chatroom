@@ -14,9 +14,9 @@ The authentication mechanism that validate user credentials was built using one 
    
 ## Setup
 This project needs to following components to work properly:
-- The RabbitMQ server.Using docker, you can start de server with the command:
+- The RabbitMQ server. Using docker, you can start the server with the command:
 `docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management`
-- A postgres database. The connection params can be configured in the yaml configuration file. Below are the commands (linux) to create the database, the user and the privileges for the user on the database:
+- A postgres database. The connection params can be configured in the yaml configuration file. Below are the commands (linux) to create the database, the user and the privileges for the user on the database (assuming you have a database already installed):
 ```bash
 sudo -u postgres psql;
 create database chatroomdb;
@@ -29,16 +29,16 @@ CREATE TABLE participant(
    password VARCHAR NOT NULL
 );
 ```  
-- To add users to the database, it is necessary to execute the script `create_user` in teh following way:
+- To add users to the database, it is necessary to execute the script `create_user` in the following way:
 
 `python create_user.py -u my_username -p my_password`    
  
 
-##running instructions
+## Running instructions
 1. In order to execute the application, all the dependencies must be installed. They could be installed with the command:
 `pip install -r requirements.txt`
 
-2. In order to run the app, a RabbitMQ instance should be running. The configuration files define a local configuration. In my case I used docker to get a running RabbitMQ server. The command is as folloes:
+2. In order to run the app, a RabbitMQ instance should be running. The configuration files define a local configuration. In my case I used docker to get a running RabbitMQ server. The command is as follows:
 `docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management` 
 
 3. Once RabbitMQ is running, the web application could be launched with the following command:
@@ -57,14 +57,13 @@ Note: The configuration files could be edited to change the default settings
 
 ## Running test
 The following command executes the tests under the module `/tests`:
-bash
 ```
 python -m unittest discover -s tests
 
 ``` 
 
 ## Satisfied Requirements
-- Allow registered users to log in and talk with other users in a chatroom. Only the previous users are allowed to chat. To handle a bit of security the password is saved and compared using a codification (base64)
+- Allow registered users to log in and talk with other users in a chatroom. 
 - Allow users to post messages as commands into the chatroom with the following format
 `/stock=stock_code`. To test The functionality to could put the command `/stock=aapl.us` 
 - The bot request an external API and extracts the data to build a message like "APPL.US quote is $93.42 per share". The post owner is the bot
@@ -82,7 +81,6 @@ Chatroom
 │   app.py
 |   bot.py
 |   containers.py
-|   test.py
 |   ...    
 │
 └───config
@@ -105,8 +103,7 @@ Chatroom
 
 The main components are listed below:
 - `app.py`: Executes the web application which allows users to join the chatroom. Also serves the static files. In order to join the chatroom a web browser should be opened in the url `http://localhost:9091`. When the websocket connection is established, the rabbitmq is also launched 
-- `bot.py`: Launches the bot as a decoupled component also connecting to the rabbitmq component
-- `test.py`: Unit and integration tests defined for the main components of the solution 
+- `bot.py`: Launches the bot as a decoupled component also connecting to the rabbitmq component 
 
 - `config/config.yml`: Defines the configuration for web participants. Most the configuration is related to the RabbitMQ params
 - `config/config_bot.yml`: Defines the configuration for the bot. Includes RabbitMQ configuration but also things like the api URL
