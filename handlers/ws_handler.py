@@ -1,3 +1,6 @@
+from typing import Any
+
+from tornado import httputil
 from tornado.ioloop import IOLoop
 from tornado.web import RequestHandler
 from sockjs.tornado import SockJSConnection
@@ -5,7 +8,6 @@ from tornado.escape import json_decode
 import logging
 import json
 
-from handlers.auth import validate_authentication
 from dependency_injector.wiring import Provide
 from containers import Container
 
@@ -21,6 +23,11 @@ class IndexHandler(RequestHandler):
     """This handler is a basic regular HTTP handler to serve the chatroom page.
 
     """
+
+    def __init__(self, application: "Application", request: httputil.HTTPServerRequest,
+                 auth_handler=Provide[Container.auth_handler], **kwargs: Any):
+        super().__init__(application, request, **kwargs)
+        self.auth_handler = auth_handler
 
     def get(self):
         """
@@ -40,7 +47,12 @@ class IndexHandler(RequestHandler):
         user_info = json_decode(self.request.body)
         nickname = user_info['user']
         unchecked_pass = user_info['pass']
-        auth_response = 'ok' if validate_authentication(nickname, unchecked_pass) else 'error'
+        LOGGER.info('[IndexHandler] request for login received for username {}'.format(nickname))
+        if self.auth_handler.validate_authentication(nickname, unchecked_pass):
+            auth_response = 'ok'
+        else:
+            LOGGER.warning('Invalid credentials for username {}'.format(nickname))
+            auth_response = 'error'
         self.write(json.dumps({'msg': auth_response}))
 
 

@@ -8,8 +8,31 @@ from an API using a specific command (`/stock=STOCK_CODE`). This command is inte
 In order to keep the communication active between all browsers (users) within the chatroom, `Webscokets are used`.
 Since all participants could send and receive messages, and also the bot can listen to specific commands, an event based approach is used to solve the case. In particular the message broker RabbitMQ is used to allow users and the bot publishing messages but also subscribe to messages from other participants. Here is the detail:
 - Web participants can publish information to the topic `public` but also can subscribe to this topic in order to get other user messages
-- The bot listen to the topic `/stock` and publish to the topic `public` in order to make the message public to other participants  
+- The bot listen to the topic `/stock` and publish to the topic `public` in order to make the message public to other participants
+
+The authentication mechanism that validate user credentials was built using one of the most advanced hashing algorithms, according to OWASP, the `Argon2id` algorithm. [Here you can find more information](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)  
    
+## Setup
+This project needs to following components to work properly:
+- The RabbitMQ server.Using docker, you can start de server with the command:
+`docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management`
+- A postgres database. The connection params can be configured in the yaml configuration file. Below are the commands (linux) to create the database, the user and the privileges for the user on the database:
+```bash
+sudo -u postgres psql;
+create database chatroomdb;
+create user chatroom with encrypted password chatroom;
+grant all privileges on database chatroomdb to chatroom;
+
+CREATE TABLE participant(
+   id SERIAL PRIMARY KEY,
+   username VARCHAR NOT NULL,
+   password VARCHAR NOT NULL
+);
+```  
+- To add users to the database, it is necessary to execute the script `create_user` in teh following way:
+
+`python create_user.py -u my_username -p my_password`    
+ 
 
 ##running instructions
 1. In order to execute the application, all the dependencies must be installed. They could be installed with the command:
@@ -26,14 +49,8 @@ Since all participants could send and receive messages, and also the bot can lis
 
 5. Now the application could be used. Open the browser on the url `http://localhost:9091`
 
-6. The application has some preconfigured users that are allowed to chat into the chatroom. There are the users:
+6. Login with one of the previous registered users (executing the script `create_user` as explained above):
 
-| user  | password  |
-|---|---|
-| nick  | 123  |
-| user1  | 123  |
-| user2  | 123  |
-| user3  | 123  |
 
  
 Note: The configuration files could be edited to change the default settings 

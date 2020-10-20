@@ -21,7 +21,7 @@ $(document).ready(function() {
             myFunction();
         } else if (person !== null & password !== null) {
             auth_data.user = person;
-            auth_data.pass = btoa(password);
+            auth_data.pass = password;
 
             const params = {
                 headers: {"content-type":"application/json; charset=UTF-8"},

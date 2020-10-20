@@ -1,7 +1,13 @@
-host: "localhost"
-port: 5672
-exchange: "chatexchange"
-exchange_type: "topic"
-binding_key: "public"
-routing_key: "public"
 api_command: "/stock"
+rabbitmq:
+  host: "localhost"
+  port: 5672
+  exchange: "chatexchange"
+  exchange_type: "topic"
+  binding_key: "public"
+  routing_key: "public"
+db:
+  name: "chatroomdb"
+  host: "localhost"
+  user: "chatroom"
+  password: "chatroom"
