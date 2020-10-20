@@ -53,7 +53,15 @@ CREATE TABLE participant(
 
 
  
-Note: The configuration files could be edited to change the default settings 
+Note: The configuration files could be edited to change the default settings
+
+## Running test
+The following command executes the tests under the module `/tests`:
+bash
+```
+python -m unittest discover -s tests
+
+``` 
 
 ## Satisfied Requirements
 - Allow registered users to log in and talk with other users in a chatroom. Only the previous users are allowed to chat. To handle a bit of security the password is saved and compared using a codification (base64)

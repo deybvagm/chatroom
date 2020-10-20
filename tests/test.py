@@ -1,12 +1,16 @@
 import unittest
+from unittest.mock import patch
+from unittest.mock import Mock
+from nacl import pwhash
+import csv
+import yaml
+
 from utils import request_stock, build_message, extract_info_from_message, get_stock_code, get_destinate
 from handlers.chat_participant import ChatParticipant
 from handlers.bot_handler import BotHandler
+from handlers.auth import AuthHandler
 from rabbitmq.pubsub import RabbitmqClient
-import csv
-from unittest.mock import patch
-from unittest.mock import Mock
-import yaml
+from db.db_connector import DBConnector
 
 
 class TestApi(unittest.TestCase):
@@ -91,7 +95,7 @@ class TestApi(unittest.TestCase):
 
     def test_bot_handler(self):
         message = '{"name": "jaz", "participants": 5, "msg_type": "public", "msg": "/stock=aapl.us", "stage": "msg"}'
-        expected_message = '{"name": "bot", "participants": 5, "msg_type": "public", "msg": "AAPL.US quote is $116.97 per share", "stage": "msg"}'
+        expected_message = '{"name": "bot", "participants": 5, "msg_type": "public", "msg": "AAPL.US quote is $'
         with open('tests/test_config_bot.yml') as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -99,7 +103,40 @@ class TestApi(unittest.TestCase):
         with patch.object(message_broker_mock, 'publish') as mock:
             client = BotHandler(message_broker=message_broker_mock, config=config)
             client.handle_queue_event(message)
-        mock.assert_called_once_with(expected_message,  app_id='bot', routing_key=None)
+        mock.assert_called_once()
+        msg = mock.call_args[0]
+        self.assertTrue(msg[0].startswith(expected_message)), 'Should start wth correct message format'
+
+    def test_authentication_failed_when_user_does_not_exist(self):
+        username = 'user1'
+        unchecked_password = '123'
+        store_mock = Mock(spec=DBConnector)
+        store_mock.query.return_value = None
+        auth = AuthHandler(store_mock)
+        response = auth.validate_authentication(username, unchecked_password)
+        self.assertFalse(response)
+
+    def test_authentication_success_when_user_and_pass_match(self):
+        username = 'valid_user'
+        unchecked_password = 'valid_password'
+        hashed_pass = pwhash.argon2id.str(bytes('valid_password', 'utf-8'))
+        decoded_pass = hashed_pass.decode("utf-8")
+        store_mock = Mock(spec=DBConnector)
+        store_mock.query.return_value = (decoded_pass,)
+        auth = AuthHandler(store_mock)
+        response = auth.validate_authentication(username, unchecked_password)
+        self.assertTrue(response)
+
+    def test_authentication_fail_when_user_and_pass_do_not_match(self):
+        username = 'valid_user'
+        unchecked_password = 'invalid_password'
+        hashed_pass = pwhash.argon2id.str(bytes('valid_password', 'utf-8'))
+        decoded_pass = hashed_pass.decode("utf-8")
+        store_mock = Mock(spec=DBConnector)
+        store_mock.query.return_value = (decoded_pass,)
+        auth = AuthHandler(store_mock)
+        response = auth.validate_authentication(username, unchecked_password)
+        self.assertFalse(response)
 
 
 if __name__ == '__main__':

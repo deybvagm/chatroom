@@ -36,6 +36,7 @@ $(document).ready(function() {
                     $('.welcome .welcomeLine').append($('<h2>').text('Welcome, '));
                     $('.welcome .welcomeLine').append($('<h3>').text(person + '.'));
                     $('.welcome').append($('<code>'));
+                    connect();
                 }else{
                     alert('Invalid credentials. Try again!');
                     myFunction();
