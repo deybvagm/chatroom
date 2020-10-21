@@ -28,6 +28,13 @@ CREATE TABLE participant(
    username VARCHAR NOT NULL,
    password VARCHAR NOT NULL
 );
+
+CREATE TABLE message (
+   id SERIAL PRIMARY KEY,
+   username VARCHAR NOT NULL,
+   message VARCHAR NOT NULL,
+   date timestamp NOT NULL
+);
 ```  
 - To add users to the database, it is necessary to execute the script `create_user` in the following way:
 
