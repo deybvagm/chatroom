@@ -28,7 +28,7 @@ params = {
     'username': args.user,
     'password': password.decode("utf-8")
 }
-db.insert(sql, params)
+db.save(sql, params)
 
 
 

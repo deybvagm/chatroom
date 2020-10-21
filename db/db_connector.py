@@ -23,7 +23,7 @@ class DBConnector:
         result = self.db_cur.fetchone()
         return result
 
-    def insert(self, query, params):
+    def save(self, query, params):
         self.db_cur.execute(query, params)
         self.connection.commit()
 

@@ -9,8 +9,8 @@ from utils import request_stock, build_message, extract_info_from_message, get_s
 from handlers.chat_participant import ChatParticipant
 from handlers.bot_handler import BotHandler
 from handlers.auth import AuthHandler
+from handlers.storage import Storage
 from rabbitmq.pubsub import RabbitmqClient
-from db.db_connector import DBConnector
 
 
 class TestApi(unittest.TestCase):
@@ -65,9 +65,10 @@ class TestApi(unittest.TestCase):
             config = yaml.load(f, Loader=yaml.FullLoader)
 
         message_broker_mock = Mock(spec=RabbitmqClient)
+        storage_mock = Mock(spec=Storage)
         with patch.object(MyClass, 'my_callback') as mock:
             mock.return_value.start.return_value = ''
-            client = ChatParticipant(message_broker=message_broker_mock, config=config)
+            client = ChatParticipant(message_broker=message_broker_mock, config=config, storage=storage_mock)
             client.setup(MyClass.my_callback, username='user1')
             client.handle_queue_event(message)
         mock.assert_called_once_with(message)
@@ -86,9 +87,10 @@ class TestApi(unittest.TestCase):
         with open('tests/test_config.yml') as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
+        mock_storage = Mock(spec=Storage)
         message_broker_mock = Mock(spec=RabbitmqClient)
         with patch.object(message_broker_mock, 'publish') as mock:
-            client = ChatParticipant(message_broker=message_broker_mock, config=config)
+            client = ChatParticipant(message_broker=message_broker_mock, config=config, storage=mock_storage)
             client.setup(MyClass.my_callback, username='user1')
             client.notify(message, n_users=6)
         mock.assert_called_once_with(expected_message,  '/stock', app_id='user1')
@@ -110,8 +112,8 @@ class TestApi(unittest.TestCase):
     def test_authentication_failed_when_user_does_not_exist(self):
         username = 'user1'
         unchecked_password = '123'
-        store_mock = Mock(spec=DBConnector)
-        store_mock.query.return_value = None
+        store_mock = Mock(spec=Storage)
+        store_mock.get_user_credentials.return_value = None
         auth = AuthHandler(store_mock)
         response = auth.validate_authentication(username, unchecked_password)
         self.assertFalse(response)
@@ -121,8 +123,8 @@ class TestApi(unittest.TestCase):
         unchecked_password = 'valid_password'
         hashed_pass = pwhash.argon2id.str(bytes('valid_password', 'utf-8'))
         decoded_pass = hashed_pass.decode("utf-8")
-        store_mock = Mock(spec=DBConnector)
-        store_mock.query.return_value = (decoded_pass,)
+        store_mock = Mock(spec=Storage)
+        store_mock.get_user_credentials.return_value = (decoded_pass,)
         auth = AuthHandler(store_mock)
         response = auth.validate_authentication(username, unchecked_password)
         self.assertTrue(response)
@@ -132,8 +134,8 @@ class TestApi(unittest.TestCase):
         unchecked_password = 'invalid_password'
         hashed_pass = pwhash.argon2id.str(bytes('valid_password', 'utf-8'))
         decoded_pass = hashed_pass.decode("utf-8")
-        store_mock = Mock(spec=DBConnector)
-        store_mock.query.return_value = (decoded_pass,)
+        store_mock = Mock(spec=Storage)
+        store_mock.get_user_credentials.return_value = (decoded_pass,)
         auth = AuthHandler(store_mock)
         response = auth.validate_authentication(username, unchecked_password)
         self.assertFalse(response)

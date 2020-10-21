@@ -4,6 +4,7 @@ from rabbitmq.pubsub import RabbitmqClient
 from handlers.chat_participant import ChatParticipant
 from handlers.bot_handler import BotHandler
 from handlers.auth import AuthHandler
+from handlers.storage import Storage
 from db.db_connector import DBConnector
 
 
@@ -13,10 +14,21 @@ class Container(containers.DeclarativeContainer):
         RabbitmqClient,
         conf=config.rabbitmq
     )
+
+    db_connector = providers.Singleton(
+        DBConnector,
+        config=config.db
+    )
+
+    storage = providers.Singleton(
+        Storage,
+        db_connector=db_connector
+    )
     chat_participant = providers.Factory(
         ChatParticipant,
         message_broker=rabbitmq_client,
-        config=config
+        config=config,
+        storage=storage
     )
 
     bot_handler = providers.Factory(
@@ -25,12 +37,9 @@ class Container(containers.DeclarativeContainer):
         message_broker=rabbitmq_client
     )
 
-    db_connector = providers.Singleton(
-        DBConnector,
-        config=config.db
-    )
-
     auth_handler = providers.Singleton(
         AuthHandler,
-        store_handler=db_connector
+        store_handler=storage
     )
+
+

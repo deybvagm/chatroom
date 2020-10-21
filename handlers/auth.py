@@ -4,8 +4,6 @@ from nacl.exceptions import InvalidkeyError
 import logging
 LOGGER = logging.getLogger(__name__)
 
-SQL_LOGIN_STATEMENT = "SELECT password FROM participant WHERE username = %(username)s"
-
 
 class AuthHandler:
     def __init__(self, store_handler):
@@ -14,7 +12,7 @@ class AuthHandler:
     def validate_authentication(self, username, unchecked_pass):
         params = {'username': username}
         try:
-            resp = self.store.query(SQL_LOGIN_STATEMENT, params)
+            resp = self.store.get_user_credentials(params)
             if resp is not None:
                 passw_hash, = resp
                 auth_decision = pwhash.argon2id.verify(bytes(passw_hash, 'utf-8'), bytes(unchecked_pass, 'utf-8'))

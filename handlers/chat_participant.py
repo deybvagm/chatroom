@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import logging
 
@@ -7,12 +8,13 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ChatParticipant:
-    def __init__(self, message_broker, config):
+    def __init__(self, message_broker, config, storage):
         self._username = None
         self._nusers = 0
         self.message_cb = None
         self._api_command = config['api_command']
         self.message_broker = message_broker
+        self.storage = storage
         self.message_broker.start(self.handle_queue_event)
 
     def setup(self, message_cb, username):
@@ -41,14 +43,16 @@ class ChatParticipant:
             LOGGER.warning('[ChatParticipant] skipping sending message to websocket since webscoket is closed.')
             self.message_broker.stop()
         else:
-            LOGGER.info('[ChatParticipant] sending the message to corresponsding websoket')
+            LOGGER.info('[ChatParticipant] sending the message to corresponding web socket')
+            json_decoded_body['date'] = datetime.now()
+            self.storage.save_message(json_decoded_body)
             self.message_cb(body)
 
     def handle_closed_connection(self, n):
         user = self._username
         routing_key = self.get_receiver('')
         msg = build_leaving_message(user, routing_key, n)
-        LOGGER.info('[ChatParticipant] closing conecction')
+        LOGGER.info('[ChatParticipant] closing connection')
         self.message_broker.publish(msg, routing_key, app_id=self._username)
 
 
